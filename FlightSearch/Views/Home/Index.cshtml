@@ -1,0 +1,161 @@
+﻿@model FlightSearch.Models.AirPort
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Flights Search Page</h2>
+<div class="row mt-5">
+    <div class="col-md-12">
+        @*search forpm*@ 
+        @using (Html.BeginForm("SearchFlights", "Home", FormMethod.Post, new {@class = "form-inline"}))
+        {
+            <div class="form-group">
+                <label >From</label>
+                @Html.DropDownList("From", new SelectList(ViewBag.AirportsFrom, "Code", "Name"), "Select From", new {@class = "form-control mb-2 mr-sm-2 mb-sm-0"})
+                <label >To</label>
+                @Html.DropDownList("To", new SelectList(ViewBag.AirportsTo, "Code", "Name"), "Select To", new {@class = "form-control mb-2 mr-sm-2 mb-sm-0"})
+
+                <button class="btn btn-primary" id="btnSearch"> Search</button>
+            </div>
+        }
+    </div>
+</div>
+<div class="clearfix"></div>
+<h3>Search Result </h3>
+<div class="row mt-5">
+    <div class="col-md-8">
+        <div class="bs-example">
+        <div id="msg" class="alert alert-info" role="alert">
+        </div>
+            <table class="table" id="result-table">
+                <thead class="thead-default">
+                <tr>
+                    <th>#</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Flight Number</th>
+                    <th><a href="#" id="sort-departs">Departs</a></th>
+                    <th><a href="#" id="sort-arrives">Arrives</a></th>
+                    <th><a href="#" id="sort-MainCabinPrice">Main Cabin Price</a></th>
+                    <th><a href="#" id="sort-FirstClassPrice">First Class Price</a></th>
+
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@section Scripts
+{
+    <script>
+        $(document).ready(function() {
+            $("#msg").hide();
+            $("#sort-departs").click(function(e) {
+                e.preventDefault();
+                var from = $("#From").val();
+                var to = $("#To").val();
+                var url = "@Url.Action("SearchFlights", "Home")";
+                var data = { from: from, to: to, sort: "departs" };
+                searchFlightsAjax(url, data);
+            });
+            $("#sort-arrives").click(function(e) {
+                e.preventDefault();
+                var from = $("#From").val();
+                var to = $("#To").val();
+                var url = "@Url.Action("SearchFlights", "Home")";
+                var data = { from: from, to: to, sort: "arrives" };
+                searchFlightsAjax(url, data);
+            });
+            $("#sort-MainCabinPrice").click(function(e) {
+                e.preventDefault();
+                var from = $("#From").val();
+                var to = $("#To").val();
+                var url = "@Url.Action("SearchFlights", "Home")";
+                var data = { from: from, to: to, sort: "MainCabinPrice" };
+                searchFlightsAjax(url, data);
+            });
+            $("#sort-FirstClassPrice").click(function(e) {
+                e.preventDefault();
+                var from = $("#From").val();
+                var to = $("#To").val();
+                var url = "@Url.Action("SearchFlights", "Home")";
+                var data = { from: from, to: to, sort: "FirstClassPrice" };
+                searchFlightsAjax(url, data);
+            });
+            $("#btnSearch").click(function(e) {
+                e.preventDefault();
+                var from = $("#From").val();
+                var to = $("#To").val();
+                var url = "@Url.Action("SearchFlights", "Home")";
+                var data = { from: from, to: to, sort: "" };
+                searchFlightsAjax(url, data);
+            });
+
+            function searchFlightsAjax(url, data) {
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: data,
+                    success: function(result) {
+                        // console.log(JSON.stringify(result));
+                        var trHTML = '';
+                        var count = Object.keys(result).length;
+                        var msg = "";
+                        if (count > 0) {
+                            msg = count + " result found !";
+                        } else {
+                            msg = " No results found for this search parameters";
+                        }
+                        $("#msg").empty().append("<b>"+msg+"</b>").show();
+
+                        $.each(result,
+                            function(i, item) {
+                                var serial = i + 1;
+                                var dateDeparts = new Date(parseInt(item.Departs.substr(6)));
+                                var dateArrives = new Date(parseInt(item.Arrives.substr(6)));
+                                var hourDeparts = formatAMPM(dateDeparts);
+                                var hourArrives = formatAMPM(dateArrives);
+                                @*//From,To,FlightNumber,Departs,Arrives,MainCabinPrice,FirstClassPrice*@
+                                trHTML += '<tr><th scope="row">' +
+                                    serial +
+                                    '</th><td>' +
+                                    item.From +
+                                    '</td><td>' +
+                                    item.To +
+                                    '</td><td>' +
+                                    item.FlightNumber +
+                                    '</td><td>' +
+                                    hourDeparts +
+                                    '</td><td>' +
+                                    hourArrives +
+                                    '</td><td>' +
+                                    item.MainCabinPrice +
+                                    '</td><td>' +
+                                    item.FirstClassPrice +
+                                    '</td></tr>';
+                            });
+                        $('#result-table > tbody').empty();
+                        $('#result-table').append(trHTML);
+                    },
+                    beforeSend:
+                        function() {
+
+                        }
+                });
+            }
+
+            function formatAMPM(date) {
+                var hours = date.getHours();
+                var minutes = date.getMinutes();
+                var ampm = hours >= 12 ? 'pm' : 'am';
+                hours = hours % 12;
+                hours = hours ? hours : 12; // the hour '0' should be '12'
+                minutes = minutes < 10 ? '0' + minutes : minutes;
+                var strTime = hours + ':' + minutes + ' ' + ampm;
+                return strTime;
+            }
+        });
+    </script>
+}
