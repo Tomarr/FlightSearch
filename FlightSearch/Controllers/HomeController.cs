@@ -24,6 +24,7 @@ namespace FlightSearch.Controllers
             return View();
         }
 
+        // POST
         [HttpPost]
         public ActionResult SearchFlights(string from, string to,string sort="")
         { 
